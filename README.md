@@ -11,4 +11,4 @@ docker compose up
 
 
 chmod +x scripts/data-migration-local.sh 
-kir@MacBook-Pro-kirill game-stockx-infra % ./scripts/data-migration-local.sh 
+./scripts/data-migration-local.sh 

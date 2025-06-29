@@ -8,3 +8,7 @@
 docker compose build
 docker compose up
 # g-stx-infra
+
+
+chmod +x scripts/data-migration-local.sh 
+kir@MacBook-Pro-kirill game-stockx-infra % ./scripts/data-migration-local.sh 

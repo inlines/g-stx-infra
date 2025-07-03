@@ -1,0 +1,78 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    networks:
+      - frontend-backend
+    environment:
+      - DATABASE_URL=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/gstx
+      - RUST_LOG=${RUST_LOG}
+    ports:
+      - "9090:9090"
+    depends_on:
+      - postgres
+      - redis
+    command: sh -c "until pg_isready -h postgres -p 5432; do sleep 2; done; ./app"
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "80:80"
+    networks:
+      - frontend-backend
+    depends_on:
+      - backend
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: gstx
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - frontend-backend
+    # Использование "healthcheck" для проверки готовности базы данных
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      retries: 5
+      start_period: 10s
+      timeout: 5s
+
+  redis:
+    image: redis:alpine
+    networks:
+      - frontend-backend
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - frontend-backend
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAPHANA_PASSWORD}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - frontend-backend
+
+
+volumes:
+  pgdata:
+
+networks:
+  frontend-backend:
+    driver: bridge

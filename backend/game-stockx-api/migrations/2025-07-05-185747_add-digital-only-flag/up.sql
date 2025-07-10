@@ -1,1 +1,0 @@
-ALTER TABLE releases ADD COLUMN digital_only BOOLEAN NOT NULL DEFAULT false;

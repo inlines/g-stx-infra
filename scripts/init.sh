@@ -21,4 +21,30 @@ rm -rf g-stx-front
 # Установка зависимостей (если нужно)
 # npm install
 
-echo "Готово!"
+echo "фронт Готов!"
+
+
+# Переход в папку backend
+cd ../backend || { echo "Не удалось перейти в папку ../backend"; exit 1; }
+
+rm -rf .github g-stx-api game-stockx-apiå
+
+# Удаление старых файлов и папок
+rm -f requirements.txt README.md
+rm -rf game-stockx-api app tests .github g-stx-api game-stockx-api
+
+# Клонирование репозитория
+git clone git@github.com:inlines/g-stx-api.git || { echo "Ошибка при клонировании backend-репозитория"; exit 1; }
+
+# Перемещение содержимого
+mv g-stx-api/* ./game-stockx-api || { echo "Не удалось переместить файлы backend"; exit 1; }
+mv g-stx-api/.* ./game-stockx-api 2>/dev/null
+
+# Удаление временной папки
+rm -rf game-stockx-api
+
+# Установка зависимостей через pip (если нужно)
+# pip install -r requirements.txt
+
+echo "Бэкенд готов как с ножа!"
+

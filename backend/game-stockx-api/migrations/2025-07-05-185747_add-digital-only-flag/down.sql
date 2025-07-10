@@ -1,1 +1,0 @@
-ALTER TABLE releases DROP COLUMN digital_only;

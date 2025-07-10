@@ -11,6 +11,7 @@ docker compose down -v
 # g-stx-infra
 
 
+#all-data-migration.sql нужно положить в /scripts
 chmod +x ./data-migration-local.sh
 ./data-migration-local.sh
 

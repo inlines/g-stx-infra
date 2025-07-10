@@ -11,5 +11,5 @@ docker compose down -v
 # g-stx-infra
 
 
-chmod +x scripts/data-migration-local.sh 
-./scripts/data-migration-local.sh 
+chmod +x ./data-migration-local.sh
+./data-migration-local.sh

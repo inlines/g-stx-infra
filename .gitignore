@@ -1,2 +1,12 @@
 /.env
 /scripts/all-data-migration.sql
+/frontend/angular.json
+/frontend/tsconfig.spec.json
+/frontend/package-lock.json
+/frontend/tsconfig.app.json
+/frontend/package.json
+/frontend/README.md
+/frontend/tsconfig.json
+
+/frontend/public/
+/frontend/src/

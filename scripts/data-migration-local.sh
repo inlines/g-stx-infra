@@ -2,7 +2,7 @@
 
 set -e
 
-LOCAL_FILE="~/migrations.sql"
+LOCAL_FILE="./all-data-migration.sql"
 CONTAINER_NAME=$(docker ps --filter "name=postgres" --format "{{.Names}}" | head -n 1)
 TARGET_PATH="/tmp/result-data.sql"
 

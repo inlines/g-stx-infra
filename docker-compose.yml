@@ -12,7 +12,6 @@ services:
     depends_on:
       - postgres
       - redis
-    command: sh -c "until pg_isready -h postgres -p 5432; do sleep 2; done; ./app"
 
   frontend:
     build:

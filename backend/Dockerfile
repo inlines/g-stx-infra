@@ -13,13 +13,8 @@ RUN echo "deb http://mirror.yandex.ru/debian/ bookworm main contrib non-free" > 
 # Устанавливаем diesel-cli
 RUN cargo install diesel_cli --no-default-features --features postgres
 
-# Рабочая директория сборки
 WORKDIR /app
-
-# Копируем исходники проекта
 COPY game-stockx-api ./game-stockx-api
-
-# Переходим в проект
 WORKDIR /app/game-stockx-api
 
 # Сборка проекта
@@ -54,5 +49,7 @@ COPY game-stockx-api/diesel.toml ./diesel.toml
 COPY game-stockx-api/migrate.sh /usr/local/bin/migrate.sh
 RUN chmod +x /usr/local/bin/migrate.sh
 
-# По умолчанию запускаем бинарник
+# По умолчанию запускаем скрипт миграции, который потом вызывает бинарник
+ENTRYPOINT ["/usr/local/bin/migrate.sh"]
 CMD ["./app"]
+

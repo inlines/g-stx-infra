@@ -1,0 +1,24 @@
+0 info it worked if it ends with ok
+1 verbose cli [
+1 verbose cli   '/usr/local/bin/node',
+1 verbose cli   '/usr/local/bin/npm',
+1 verbose cli   'run',
+1 verbose cli   'build',
+1 verbose cli   'frontend',
+1 verbose cli   '--no-cache'
+1 verbose cli ]
+2 info using npm@6.14.15
+3 info using node@v14.18.1
+4 verbose stack Error: ENOENT: no such file or directory, open '/Users/kir/Desktop/game-stockx-infra/package.json'
+5 verbose cwd /Users/kir/Desktop/game-stockx-infra
+6 verbose Darwin 24.4.0
+7 verbose argv "/usr/local/bin/node" "/usr/local/bin/npm" "run" "build" "frontend" "--no-cache"
+8 verbose node v14.18.1
+9 verbose npm  v6.14.15
+10 error code ENOENT
+11 error syscall open
+12 error path /Users/kir/Desktop/game-stockx-infra/package.json
+13 error errno -2
+14 error enoent ENOENT: no such file or directory, open '/Users/kir/Desktop/game-stockx-infra/package.json'
+15 error enoent This is related to npm not being able to find a file.
+16 verbose exit [ -2, true ]

@@ -13,3 +13,7 @@ docker compose down -v
 
 chmod +x ./data-migration-local.sh
 ./data-migration-local.sh
+
+chmod +x ./init.sh
+./init.sh
+

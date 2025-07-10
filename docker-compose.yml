@@ -2,8 +2,6 @@ services:
   backend:
     build:
       context: ./backend
-      args:
-        BACKEND_REPO: ${BACKEND_REPO}
     networks:
       - frontend-backend
     environment:
@@ -19,14 +17,14 @@ services:
   frontend:
     build:
       context: ./frontend
-      args:
-        FRONTEND_REPO: ${FRONTEND_REPO}
     ports:
       - "80:80"
     networks:
       - frontend-backend
     depends_on:
       - backend
+    volumes:
+      - /var/www/static:/var/www/static:ro
 
   postgres:
     image: postgres:15

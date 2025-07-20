@@ -1,5 +1,5 @@
 # Стадия сборки
-FROM rustlang/rust:nightly AS builder
+FROM rust:1.87.0 AS builder
 
 # Устанавливаем зависимости и меняем зеркала
 RUN echo "deb http://mirror.yandex.ru/debian/ bookworm main contrib non-free" > /etc/apt/sources.list && \

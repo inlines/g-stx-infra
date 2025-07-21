@@ -1,5 +1,5 @@
 # Стадия сборки
-FROM rust:1.87.0 AS builder
+FROM rustlang/rust:nightly AS builder
 
 # Устанавливаем зависимости и меняем зеркала
 RUN echo "deb http://mirror.yandex.ru/debian/ bookworm main contrib non-free" > /etc/apt/sources.list && \
@@ -11,7 +11,7 @@ RUN echo "deb http://mirror.yandex.ru/debian/ bookworm main contrib non-free" > 
     rm -rf /var/lib/apt/lists/*
 
 # Устанавливаем diesel-cli
-RUN cargo install diesel_cli --no-default-features --features postgres
+RUN cargo install diesel_cli@2.2.10 --no-default-features --features postgres
 
 WORKDIR /app
 COPY game-stockx-api ./game-stockx-api

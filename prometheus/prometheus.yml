@@ -1,35 +1,10 @@
 global:
   scrape_interval: 15s
-  evaluation_interval: 15s
 
-# Включение базовой аутентификации для веб-интерфейса и API
-web:
-  http_config:
-    basic_auth:
-      username: "admin"
-      password: "${PROMETHEUS_PASSWORD}"  # Пароль берется из переменных окружения
-  listen_address: "0.0.0.0:9090"
-  enable_admin_api: false  # Отключаем опасные административные API
-  enable_remote_write_receiver: false  # Запрещаем удаленную запись
-
-# Конфигурация сбора метрик
 scrape_configs:
   - job_name: 'backend'
-    scheme: 'http'
-    basic_auth:
-      username: "admin"
-      password: "${PROMETHEUS_PASSWORD}"  # Аутентификация для сбора метрик
     static_configs:
       - targets: ['backend:9090']
-      labels:
-        service: "backend"
-
-# Дополнительная безопасность
-alerting:
-  alertmanagers:
-    - scheme: http
-      basic_auth:
-        username: "admin"
-        password: "${PROMETHEUS_PASSWORD}"
-      static_configs:
-        - targets: ['alertmanager:9093']
+    basic_auth:
+      username: admin
+      password: ${PROMETHEUS_PASSWORD}

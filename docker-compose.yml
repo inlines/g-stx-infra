@@ -80,7 +80,7 @@ services:
     image: prom/prometheus
     container_name: prometheus
     ports:
-      - "127.0.0.1:9090:9090"  # Только локальный доступ!
+      - "9091:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./prometheus/web.yml:/etc/prometheus/web.yml

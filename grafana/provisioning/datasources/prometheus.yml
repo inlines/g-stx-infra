@@ -1,0 +1,14 @@
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    basicAuth: true
+    basicAuthUser: "admin"  # Должен совпадать с пользователем из prometheus/web.yml
+    secureJsonData:
+       basicAuthPassword: "zigazaga"  # Синтаксис для Grafana
+    jsonData:
+      httpMethod: "POST"
+      timeInterval: "15s"
+    isDefault: true

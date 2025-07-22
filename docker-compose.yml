@@ -6,12 +6,45 @@ services:
       - frontend-backend
     environment:
       - DATABASE_URL=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/gstx
+      - REDIS_URL=redis://default:${REDIS_PASSWORD}@redis:6379
       - RUST_LOG=${RUST_LOG}
     ports:
       - "9090:9090"
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:  # Добавлен healthcheck для backend
+      test: ["CMD", "curl", "-f", "http://localhost:9090/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  
+  redis:
+    image: redis:alpine
+    command: [
+      "redis-server",
+      "--requirepass $${REDIS_PASSWORD}",
+      "--bind 0.0.0.0",
+      "--maxmemory 256mb",  # Лимит памяти
+      "--maxmemory-policy allkeys-lru",
+      "--save 60 1"  # Сохранение каждые 60 сек при 1 изменении
+    ]
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - frontend-backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
 
   frontend:
     build:
@@ -43,11 +76,6 @@ services:
       start_period: 10s
       timeout: 5s
 
-  redis:
-    image: redis:alpine
-    networks:
-      - frontend-backend
-
   prometheus:
     image: prom/prometheus
     container_name: prometheus
@@ -55,14 +83,27 @@ services:
       - "9091:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/web.yml:/etc/prometheus/web.yml
+    environment:
+      - BASIC_AUTH_PASSWORD=${PROMETHEUS_PASSWORD}
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.config.file=/etc/prometheus/web.yml'
     networks:
       - frontend-backend
 
   grafana:
     image: grafana/grafana
     container_name: grafana
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAPHANA_PASSWORD}
+      - PROMETHEUS_PASSWORD=${PROMETHEUS_PASSWORD}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAPHANA_PASSWORD}
+      - GF_AUTH_PROXY_ENABLED=true
+      - GF_AUTH_PROXY_HEADER_NAME=X-WEBAUTH-USER
+      - GF_AUTH_PROXY_HEADER_PROPERTY=username
+      - GF_AUTH_PROXY_AUTO_SIGN_UP=true
     ports:
       - "3000:3000"
     depends_on:
@@ -72,6 +113,11 @@ services:
 
 
 volumes:
+  redis_data:
+      driver: local
+      driver_opts:
+        type: tmpfs
+        device: tmpfs
   pgdata:
 
 networks:

@@ -1,12 +1,12 @@
 # Стадия сборки
 FROM rustlang/rust:nightly AS builder
 
-# Устанавливаем зависимости и меняем зеркала
-RUN echo "deb http://mirror.yandex.ru/debian/ bookworm main contrib non-free" > /etc/apt/sources.list && \
-    echo "deb http://mirror.yandex.ru/debian/ bookworm-updates main contrib non-free" >> /etc/apt/sources.list && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    apt-get -o Acquire::ForceIPv4=true update && \
+# Жёстко переопределяем все репозитории на mirror.yandex.ru
+RUN echo "deb [trusted=yes] http://mirror.yandex.ru/debian/ bookworm main contrib non-free" > /etc/apt/sources.list && \
+    echo "deb [trusted=yes] http://mirror.yandex.ru/debian/ bookworm-updates main contrib non-free" >> /etc/apt/sources.list && \
+    echo "deb [trusted=yes] http://mirror.yandex.ru/debian-security bookworm-security main contrib non-free" >> /etc/apt/sources.list && \
+    rm -f /etc/apt/sources.list.d/* && \
+    apt-get update -o Acquire::ForceIPv4=true && \
     apt-get install -y postgresql-client libpq-dev pkg-config curl && \
     rm -rf /var/lib/apt/lists/*
 
@@ -20,36 +20,28 @@ WORKDIR /app/game-stockx-api
 # Сборка проекта
 RUN cargo build --release
 
-# Стадия исполнения (рантайм)
+# Стадия исполнения
 FROM debian:bookworm-slim AS runtime
 
-# Устанавливаем зависимости и меняем зеркала
-RUN echo "deb http://mirror.yandex.ru/debian/ bookworm main contrib non-free" > /etc/apt/sources.list && \
-    echo "deb http://mirror.yandex.ru/debian/ bookworm-updates main contrib non-free" >> /etc/apt/sources.list && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    apt-get -o Acquire::ForceIPv4=true update && \
-    apt-get install -y postgresql-client libpq5 && \
+# Устанавливаем только минимально необходимые пакеты
+RUN echo "deb [trusted=yes] http://mirror.yandex.ru/debian/ bookworm main contrib non-free" > /etc/apt/sources.list && \
+    echo "deb [trusted=yes] http://mirror.yandex.ru/debian-security bookworm-security main contrib non-free" >> /etc/apt/sources.list && \
+    rm -f /etc/apt/sources.list.d/* && \
+    apt-get update -o Acquire::ForceIPv4=true && \
+    apt-get install -y libpq5 postgresql-client-15 && \
     rm -rf /var/lib/apt/lists/*
 
-# Рабочая директория
 WORKDIR /app
 
-# Копируем бинарник из builder-стадии
+# Копируем бинарник и зависимости
 COPY --from=builder /app/game-stockx-api/target/release/game-stockx-api ./app
-
-# Копируем diesel CLI
 COPY --from=builder /usr/local/cargo/bin/diesel /usr/local/bin/diesel
-
-# Копируем миграции и diesel.toml
 COPY game-stockx-api/migrations ./migrations
 COPY game-stockx-api/diesel.toml ./diesel.toml
 
-# (опционально) Копируем скрипт миграций
+# Скрипт миграций
 COPY game-stockx-api/migrate.sh /usr/local/bin/migrate.sh
 RUN chmod +x /usr/local/bin/migrate.sh
 
-# По умолчанию запускаем скрипт миграции, который потом вызывает бинарник
 ENTRYPOINT ["/usr/local/bin/migrate.sh"]
 CMD ["./app"]
-

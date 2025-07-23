@@ -9,7 +9,7 @@ services:
       - REDIS_URL=redis://default:${REDIS_PASSWORD}@redis:6379
       - RUST_LOG=${RUST_LOG}
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     depends_on:
       postgres:
         condition: service_healthy
@@ -80,8 +80,6 @@ services:
     image: prom/prometheus
     container_name: prometheus
     # Заменяем проброс порта на внутренний экспорт:
-    expose:
-      - "9090"  # Доступно только внутри Docker-сети
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./prometheus/web.yml:/etc/prometheus/web.yml

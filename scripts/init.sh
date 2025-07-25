@@ -41,6 +41,8 @@ git clone git@github.com:inlines/g-stx-api.git || { echo "Ошибка при к
 mv g-stx-api/game-stockx-api .
 rm -rf g-stx-api
 
+cd ../grafana
+chmod -R 777 provisioning/
 
 
 # Установка зависимостей через pip (если нужно)

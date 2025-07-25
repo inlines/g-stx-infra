@@ -96,6 +96,7 @@ services:
     image: grafana/grafana
     container_name: grafana
     volumes:
+      - grafana-storage:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
     environment:
       - PROMETHEUS_PASSWORD=${PROMETHEUS_PASSWORD}
@@ -104,6 +105,7 @@ services:
       - GF_AUTH_PROXY_HEADER_NAME=X-WEBAUTH-USER
       - GF_AUTH_PROXY_HEADER_PROPERTY=username
       - GF_AUTH_PROXY_AUTO_SIGN_UP=true
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
     ports:
       - "3000:3000"
     depends_on:
@@ -119,6 +121,7 @@ volumes:
         type: tmpfs
         device: tmpfs
   pgdata:
+  grafana-storage:
 
 networks:
   frontend-backend:

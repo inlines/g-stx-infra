@@ -805,3 +805,9 @@ echo "basic_auth_users:
   "uid": "0926e8e2-6db7-4aa8-9c03-a2b89f4f59b9",
   "version": 2
 }
+
+
+
+docker compose stop frontend
+docker compose rm frontend
+docker compose up -d --force-recreate frontend

@@ -1,0 +1,151 @@
+server {
+    listen 80;
+
+    # =====================
+    # ЗАЩИТА ОТ СКАНЕРОВ
+    # =====================
+    
+    # 1. БЛОКИРОВКА ВСЕХ .php ЗАПРОСОВ (быстро и эффективно)
+    location ~ \.php$ {
+        access_log off;
+        log_not_found off;
+        return 444;  # Немедленное закрытие соединения
+    }
+
+    # 2. ЛОВУШКИ ДЛЯ ПОПУЛЯРНЫХ ПУТЕЙ АТАК
+    location ~* ^/(admin|wp|mysql|phpmyadmin|config|\.git|\.env|\.ht) {
+        # Медленно отдаем 404, чтобы сканер тормозил
+        limit_rate 10;
+        limit_rate_after 100;
+        return 404;
+    }
+
+    # 3. БЛОКИРОВКА ПОДОЗРИТЕЛЬНЫХ USER-AGENT
+    set $block_user_agent 0;
+    
+    if ($http_user_agent ~* (sqlmap|nikto|w3af|acunetix|nessus|netsparker|wpscan)) {
+        set $block_user_agent 1;
+    }
+    
+    if ($http_user_agent ~* (Python-urllib|libwww-perl|WinHTTP|masscan|zgrab)) {
+        set $block_user_agent 1;
+    }
+    
+    location / {
+        # Проверяем User-Agent перед основным location
+        if ($block_user_agent = 1) {
+            return 444;
+        }
+        
+        root /usr/share/nginx/html;
+        index index.html;
+        try_files $uri $uri/ /index.html;
+    }
+
+    # 4. ЗАЩИЩАЕМ API ОТ БРУТФОРСА
+    location /api/ {
+        # Ограничиваем запросы к API
+        limit_req zone=api_limit burst=10 nodelay;
+        
+        proxy_pass http://backend:9090;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # 5. ЗАЩИТА WEBSOCKET
+    location /ws/ {
+        # Только WebSocket соединения
+        if ($http_upgrade != "websocket") {
+            return 400;
+        }
+        
+        proxy_pass http://backend:9090;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Таймауты для WS
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+
+    # 6. СТАТИКА С БЕЗОПАСНОСТЬЮ
+    location /static/ {
+        # Блокируем выполнение скриптов в статике
+        location ~ \.(php|pl|py|jsp|asp|sh|cgi)$ {
+            return 444;
+        }
+        
+        root /var/www;
+        try_files $uri $uri/ =404;
+        
+        # Заголовки безопасности для статики
+        add_header X-Content-Type-Options "nosniff";
+        add_header X-Frame-Options "DENY";
+        expires 30d;
+        access_log off;
+    }
+
+    # 7. ЧЕРНЫЙ СПИСОК IP (пример)
+    location / {
+        # Можно добавить проверку плохих IP
+        # if ($remote_addr = "20.27.216.90") { return 444; }
+        
+        # Основная логика SPA
+        root /usr/share/nginx/html;
+        index index.html;
+        try_files $uri $uri/ /index.html;
+    }
+
+    # 8. БЕЗОПАСНЫЙ robots.txt
+    location = /robots.txt {
+        add_header Content-Type text/plain;
+        return 200 "User-agent: *
+Disallow: /admin/
+Disallow: /wp-admin/
+Disallow: /config/
+Disallow: /.git/
+Disallow: /*.php$
+Disallow: /*.asp$
+Disallow: /*.aspx$
+Sitemap: https://ваш-домен/sitemap.xml
+";
+    }
+
+    # 9. ЗАЩИТА ОТ СКАНИРОВАНИЯ ДИРЕКТОРИЙ
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+        return 404;
+    }
+
+    # 10. БАН НЕСУЩЕСТВУЮЩИХ МЕТОДОВ
+    if ($request_method !~ ^(GET|HEAD|POST|PUT|DELETE|OPTIONS)$) {
+        return 405;
+    }
+}
+
+# =====================
+# ГЛОБАЛЬНЫЕ НАСТРОЙКИ (в http блоке nginx.conf)
+# =====================
+# Добавьте в /etc/nginx/nginx.conf:
+http {
+    # Зона ограничения для API
+    limit_req_zone $binary_remote_addr zone=api_limit:10m rate=5r/s;
+    
+    # Зона для сканеров
+    limit_req_zone $binary_remote_addr zone=scanner_zone:10m rate=2r/m;
+    
+    # Скрываем версию nginx
+    server_tokens off;
+    
+    # ...
+}

@@ -34,3 +34,26 @@ echo "basic_auth_users:
 docker compose stop frontend
 docker compose rm frontend
 docker compose up -d --force-recreate frontend
+
+
+docker compose logs -f --tail=all
+
+
+# Вставь в терминал и нажми Enter
+(
+  echo "=== ЖИВАЯ СТАТИСТИКА СКАНЕРОВ ==="
+  echo ""
+  total=0
+  docker-compose logs -f frontend 2>&1 | \
+    grep --line-buffered -E "(\.php|\.asp)" | \
+    while read -r line; do
+      total=$((total + 1))
+      ip=$(echo "$line" | awk '{print $1}')
+      file=$(echo "$line" | awk -F'"' '{print $2}' | awk '{print $2}' | cut -d' ' -f1)
+      time_sec=$((total * 28))
+      minutes=$((time_sec / 60))
+      seconds=$((time_sec % 60))
+      printf "\033[32m[+]\033[0m Запрос %d | IP: %s | Файл: %s | Всего времени: %d:%02d\n" \
+        "$total" "$ip" "$file" "$minutes" "$seconds"
+    done
+)

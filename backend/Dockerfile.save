@@ -1,0 +1,42 @@
+# Стадия сборки
+# Match the working local compiler; floating nightly breaks redis 0.23.x.
+FROM rust:1.91.1-bookworm AS builder
+
+# Use the signed Debian repositories shipped with the bookworm image.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libpq-dev pkg-config && \
+    rm -rf /var/lib/apt/lists/*
+
+# Устанавливаем diesel-cli
+RUN cargo install diesel_cli@2.2.10 --locked --no-default-features --features postgres
+
+WORKDIR /app
+COPY game-stockx-api ./game-stockx-api
+WORKDIR /app/game-stockx-api
+
+# Сборка проекта
+RUN cargo build --release --locked
+
+# Стадия исполнения
+FROM debian:bookworm-slim AS runtime
+
+# curl is required by the backend healthcheck in docker-compose.yml.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libpq5 postgresql-client-15 curl ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Копируем бинарник и зависимости
+COPY --from=builder /app/game-stockx-api/target/release/game-stockx-api ./app
+COPY --from=builder /usr/local/cargo/bin/diesel /usr/local/bin/diesel
+COPY game-stockx-api/migrations ./migrations
+COPY game-stockx-api/diesel.toml ./diesel.toml
+
+# Скрипт миграций
+COPY game-stockx-api/migrate.sh /usr/local/bin/migrate.sh
+RUN chmod +x /usr/local/bin/migrate.sh
+
+ENTRYPOINT ["/usr/local/bin/migrate.sh"]
+CMD ["./ap:
+

@@ -1,17 +1,4 @@
 services:
-  igdb-metrics:
-    image: prom/node-exporter:v1.11.1
-    restart: unless-stopped
-    command:
-      - '--collector.disable-defaults'
-      - '--collector.textfile'
-      - '--collector.textfile.directory=/metrics'
-      - '--web.disable-exporter-metrics'
-    volumes:
-      - "/var/lib/game-stockx-igdb/metrics:/metrics:ro"
-    networks:
-      - frontend-backend
-
   backend:
     build:
       context: ./backend

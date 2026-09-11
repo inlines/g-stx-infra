@@ -1,52 +1,31 @@
-#!/bin/bash
-
-# Переход в папку frontend
-cd ../frontend || { echo "Не удалось перейти в папку ../frontend"; exit 1; }
-
-# Удаление ненужных файлов
-rm -f angular.json tsconfig.spec.json package-lock.json tsconfig.app.json package.json README.md tsconfig.json
-
-# Удаление папок
-rm -rf g-stx-front public src
-
-# Клонирование репозитория
-git clone git@github.com:inlines/g-stx-front.git || { echo "Ошибка при клонировании репозитория"; exit 1; }
-
-# Перемещение содержимого из новой папки
-mv g-stx-front/* . || { echo "Не удалось переместить файлы"; exit 1; }
-
-# Удаление пустой папки репозитория
-rm -rf g-stx-front
-
-# Установка зависимостей (если нужно)
-# npm install
-
-echo "фронт Готов!"
-
-
-# Переход в папку backend
-cd ../backend || { echo "Не удалось перейти в папку ../backend"; exit 1; }
-
-rm -rf .github g-stx-api game-stockx-api
-
-# Удаление старых файлов и папок
-rm -f requirements.txt README.md
-rm -rf game-stockx-api app tests .github g-stx-api game-stockx-api
-
-mkdir game-stockx-api
-
-# Клонирование репозитория
-git clone git@github.com:inlines/g-stx-api.git || { echo "Ошибка при клонировании backend-репозитория"; exit 1; }
-
-mv g-stx-api/game-stockx-api .
-rm -rf g-stx-api
-
-cd ../grafana
-chmod -R 777 provisioning/
-
-
-# Установка зависимостей через pip (если нужно)
-# pip install -r requirements.txt
-
-echo "Бэкенд готов как с ножа!"
-
+#!/usr/bin/env bash
+# Stage both checkouts before touching the currently buildable sources.
+set -Eeuo pipefail
+ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
+MODE=${1:-all}
+BRANCH=${2:-main}
+case "$MODE" in all|frontend|backend) ;; *) echo 'Usage: init.sh [all|frontend|backend] [branch]' >&2; exit 2 ;; esac
+STAGE=$(mktemp -d "${TMPDIR:-/tmp}/gstx-init.XXXXXXXX")
+trap 'rm -rf -- "$STAGE"' EXIT
+if [[ "$MODE" != backend ]]; then
+    git clone --depth 1 --branch "$BRANCH" --single-branch git@github.com:inlines/g-stx-front.git "$STAGE/frontend"
+    [[ -f "$STAGE/frontend/package-lock.json" && -d "$STAGE/frontend/src" ]]
+fi
+if [[ "$MODE" != frontend ]]; then
+    git clone --depth 1 --branch "$BRANCH" --single-branch git@github.com:inlines/g-stx-api.git "$STAGE/backend"
+    [[ -f "$STAGE/backend/game-stockx-api/Cargo.lock" && -d "$STAGE/backend/game-stockx-api/migrations" ]]
+fi
+if [[ "$MODE" != backend ]]; then
+    for item in angular.json tsconfig.spec.json package-lock.json tsconfig.app.json package.json README.md tsconfig.json public src .nvmrc; do
+        rm -rf -- "$ROOT/frontend/$item"
+        if [[ -e "$STAGE/frontend/$item" ]]; then cp -R "$STAGE/frontend/$item" "$ROOT/frontend/$item"; fi
+    done
+    echo 'Frontend sources updated.'
+fi
+if [[ "$MODE" != frontend ]]; then
+    rm -rf -- "$ROOT/backend/game-stockx-api"
+    cp -R "$STAGE/backend/game-stockx-api" "$ROOT/backend/game-stockx-api"
+    echo 'Backend sources updated.'
+fi
+find "$ROOT/grafana/provisioning" -type d -exec chmod 755 {} +
+find "$ROOT/grafana/provisioning" -type f -exec chmod 644 {} +

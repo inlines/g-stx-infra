@@ -12,3 +12,9 @@
 /frontend/src/
 
 /backend/game-stockx-api/
+# Deployment/editor backups
+*.before-*
+*.save
+*.swp
+
+/frontend/.nvmrc

@@ -26,8 +26,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
     healthcheck:  # Добавлен healthcheck для backend
       test: ["CMD", "curl", "-f", "http://localhost:9090/health"]
       interval: 30s
@@ -42,12 +40,13 @@ services:
       "--bind 0.0.0.0",
       "--maxmemory 256mb",  # Лимит памяти
       "--maxmemory-policy allkeys-lru",
-      "--save 60 1"  # Сохранение каждые 60 сек при 1 изменении
+      "--save", "",  # Rebuildable cache: no snapshots on tmpfs.
+      "--appendonly", "no"
     ]
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -105,16 +104,12 @@ services:
     networks:
       - frontend-backend
 
-  igdb-metrics:
-    image: prom/node-exporter:v1.11.1
+  redis-metrics:
+    image: oliver006/redis_exporter:v1.88.0
     restart: unless-stopped
-    command:
-      - '--collector.disable-defaults'
-      - '--collector.textfile'
-      - '--collector.textfile.directory=/metrics'
-      - '--web.disable-exporter-metrics'
-    volumes:
-      - /var/lib/game-stockx-igdb/metrics:/metrics:ro
+    environment:
+      REDIS_ADDR: redis://redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     networks:
       - frontend-backend
 

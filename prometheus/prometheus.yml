@@ -11,6 +11,6 @@ scrape_configs:
     basic_auth:
       username: admin
       password: ${PROMETHEUS_PASSWORD}
-  - job_name: 'igdb-sync'
+  - job_name: 'redis'
     static_configs:
-      - targets: ['igdb-metrics:9100']
+      - targets: ['redis-metrics:9121']

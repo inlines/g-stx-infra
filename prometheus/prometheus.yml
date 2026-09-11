@@ -8,3 +8,6 @@ scrape_configs:
     basic_auth:
       username: admin
       password: ${PROMETHEUS_PASSWORD}
+  - job_name: 'igdb-sync'
+    static_configs:
+      - targets: ['igdb-metrics:9100']

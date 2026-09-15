@@ -7,6 +7,7 @@ if command -v flock >/dev/null && [[ -d /opt/game-stockx-igdb/sync ]]; then
   exec 9>/opt/game-stockx-igdb/sync/.cron.lock
   flock -n 9 || { echo 'IGDB import is running; deploy after it finishes.' >&2; exit 1; }
 fi
+python3 "$ROOT/scripts/prepare-security-env.py"
 docker compose config --quiet
 docker compose build backend frontend
 docker compose up -d --no-deps --wait --wait-timeout 180 backend

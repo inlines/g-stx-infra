@@ -21,7 +21,8 @@ services:
       - DATABASE_URL=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/gstx
       - REDIS_URL=redis://default:${REDIS_PASSWORD}@redis:6379
       - RUST_LOG=${RUST_LOG}
-    ports:
+      - TRUST_PROXY_HEADERS=true
+    expose:
       - "9090"
     depends_on:
       postgres:
@@ -114,6 +115,8 @@ services:
       - frontend-backend
 
   grafana:
+    env_file:
+      - ./.secrets/monitoring.env
     image: grafana/grafana
     container_name: grafana
     volumes:

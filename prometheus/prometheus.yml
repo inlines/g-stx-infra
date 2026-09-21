@@ -14,3 +14,8 @@ scrape_configs:
   - job_name: 'redis'
     static_configs:
       - targets: ['redis-metrics:9121']
+  - job_name: 'postgres'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['postgres-metrics:9187']

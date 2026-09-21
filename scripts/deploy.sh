@@ -13,3 +13,7 @@ docker compose build backend frontend
 docker compose up -d --no-deps --wait --wait-timeout 180 backend
 docker compose up -d --no-deps --force-recreate frontend
 docker compose ps backend frontend
+
+if [[ -f .secrets/db-monitoring.enabled ]]; then
+  docker compose --profile db-monitoring up -d --no-deps postgres-metrics
+fi

@@ -19,5 +19,8 @@
 
 /frontend/.nvmrc
 
-# Local monitoring credentials
+# Local database monitoring credentials and safety backups
 /.secrets/
+/.backups/
+
+/scripts/__pycache__/

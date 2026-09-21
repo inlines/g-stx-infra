@@ -105,6 +105,23 @@ services:
     networks:
       - frontend-backend
 
+  postgres-metrics:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.18.1
+    profiles: ["db-monitoring"]
+    restart: unless-stopped
+    command:
+      - '--collector.stat_statements'
+      - '--no-collector.stat_statements.include_query'
+      - '--collector.postmaster'
+    environment:
+      DATA_SOURCE_URI: "postgres:5432/gstx?sslmode=disable&connect_timeout=5&application_name=gstx_metrics"
+      DATA_SOURCE_USER: gstx_monitor
+      DATA_SOURCE_PASS_FILE: /run/secrets/pg-monitor-password
+    volumes:
+      - ./.secrets/pg-monitor-password:/run/secrets/pg-monitor-password:ro
+    networks:
+      - frontend-backend
+
   redis-metrics:
     image: oliver006/redis_exporter:v1.88.0
     restart: unless-stopped

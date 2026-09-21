@@ -102,6 +102,8 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--web.config.file=/etc/prometheus/web.yml'
       - '--web.listen-address=:9090'
+      - '--storage.tsdb.retention.time=${PROMETHEUS_RETENTION_TIME:-90d}'
+      - '--storage.tsdb.retention.size=${PROMETHEUS_RETENTION_SIZE:-2GB}'
     networks:
       - frontend-backend
 

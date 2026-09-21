@@ -1,0 +1,59 @@
+-- Regional card semantics from catalog_serials::selected_sql + default visibility.
+-- Unlike the current Unknown API's global serials_exist predicate, a foreign-region
+-- serial does NOT close a regional gap. Exact empty region blocks Worldwide fallback.
+BEGIN READ ONLY;
+SET LOCAL statement_timeout = '20s';
+SET LOCAL lock_timeout = '2s';
+WITH releases AS MATERIALIZED (
+ SELECT r.*, EXISTS(SELECT 1 FROM unnest(r.serial) s WHERE btrim(s)<>'') AS known
+ FROM public.releases r JOIN public.platforms pl ON pl.id=r.platform AND pl.active=true AND pl.id<>6
+), flags AS (
+ SELECT product_id,platform,
+   bool_or(release_status IS DISTINCT FROM 5 AND release_date IS NOT NULL) AS visible,
+   bool_or(NOT digital_only AND known) AS physical,
+   bool_or(release_region=1) AS pal, bool_or(release_region=2) AS usa,
+   bool_or(release_region=5) AS jap, bool_or(release_region=8) AS ww,
+   bool_or(release_region IS NULL OR release_region NOT IN (1,2,5)) AS other,
+   bool_or(release_region=1 AND known) AS known_pal,
+   bool_or(release_region=2 AND known) AS known_usa,
+   bool_or(release_region=5 AND known) AS known_jap,
+   bool_or(release_region=8 AND known) AS known_ww,
+   bool_or((release_region IS NULL OR release_region NOT IN (1,2,5)) AND known) AS known_other
+ FROM releases GROUP BY product_id,platform
+), eligible AS (
+ SELECT f.* FROM flags f JOIN public.products p ON p.id=f.product_id
+ WHERE f.visible
+ AND (p.game_type NOT IN (1,2,4,13,6,5) OR p.game_type IS NULL
+      OR (f.platform=7 AND p.game_type IN (2,4) AND f.physical))
+ AND EXISTS(SELECT 1 FROM public.product_platforms pp WHERE pp.product_id=p.id
+            AND pp.platform_id=f.platform AND pp.digital_only=false)
+), regional AS (
+ SELECT e.product_id,e.platform,r.region,r.present,r.known FROM eligible e
+ CROSS JOIN LATERAL (VALUES
+ ('pal',COALESCE(e.pal,false) OR COALESCE(e.ww,false),
+    CASE WHEN COALESCE(e.pal,false) THEN COALESCE(e.known_pal,false) ELSE COALESCE(e.known_ww,false) END),
+ ('usa',COALESCE(e.usa,false) OR COALESCE(e.ww,false),
+    CASE WHEN COALESCE(e.usa,false) THEN COALESCE(e.known_usa,false) ELSE COALESCE(e.known_ww,false) END),
+ ('jap',COALESCE(e.jap,false) OR COALESCE(e.ww,false),
+    CASE WHEN COALESCE(e.jap,false) THEN COALESCE(e.known_jap,false) ELSE COALESCE(e.known_ww,false) END),
+ ('other',COALESCE(e.other,false),COALESCE(e.known_other,false))
+ ) r(region,present,known)
+), counts AS (
+ SELECT pl.id,
+   CASE pl.id WHEN 7 THEN 'PS1' WHEN 8 THEN 'PS2' WHEN 9 THEN 'PS3'
+     WHEN 38 THEN 'PSP' WHEN 48 THEN 'PS4' WHEN 167 THEN 'PS5' WHEN 32 THEN 'SATURN'
+     ELSE COALESCE(NULLIF(pl.abbreviation,''),'PLATFORM_'||pl.id) END AS platform,
+   count(DISTINCT r.product_id) FILTER (WHERE r.present AND NOT r.known) AS total,
+   count(*) FILTER (WHERE r.region='pal' AND r.present AND NOT r.known) AS pal,
+   count(*) FILTER (WHERE r.region='usa' AND r.present AND NOT r.known) AS usa,
+   count(*) FILTER (WHERE r.region='jap' AND r.present AND NOT r.known) AS jap,
+   count(*) FILTER (WHERE r.region='other' AND r.present AND NOT r.known) AS other,
+   count(*) FILTER (WHERE r.region='pal' AND r.present) AS pal_total,
+   count(*) FILTER (WHERE r.region='usa' AND r.present) AS usa_total,
+   count(*) FILTER (WHERE r.region='jap' AND r.present) AS jap_total,
+   count(*) FILTER (WHERE r.region='other' AND r.present) AS other_total
+ FROM public.platforms pl LEFT JOIN regional r ON r.platform=pl.id
+ WHERE pl.active=true AND pl.id<>6 GROUP BY pl.id,pl.abbreviation
+)
+SELECT COALESCE(json_agg(counts ORDER BY id),'[]'::json) FROM counts;
+COMMIT;

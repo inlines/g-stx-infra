@@ -1,0 +1,504 @@
+{
+  "uid": "gstx-unknown-serials",
+  "title": "Game StockX - Unknown серийники",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "tags": [
+    "gstx",
+    "unknown",
+    "serials"
+  ],
+  "timezone": "browser",
+  "refresh": "5m",
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 60,
+      "type": "row",
+      "title": "1. Сколько осталось Unknown",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      }
+    },
+    {
+      "id": 2,
+      "title": "Unknown сейчас",
+      "type": "bargauge",
+      "datasource": "Prometheus",
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max by (platform,region) (gstx_unknown_games{job=\"igdb-sync\",platform=~\"${platform:regex}\",region=~\"${region:regex}\"}) and on() ((max(gstx_unknown_collection_success{job=\"igdb-sync\"}) == 1) and (time() - max(gstx_unknown_last_success_timestamp_seconds{job=\"igdb-sync\"}) < 900))",
+          "legendFormat": "{{platform}}[{{region}}]",
+          "format": "time_series",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "min": 0,
+          "noValue": "—"
+        },
+        "overrides": []
+      },
+      "transformations": [],
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "basic",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": "Столбцы PS3[JAP], PS3[PAL], PS3[USA], PS3[OTHER] и другие платформы. PAL=Европа, USA=Америка, JAP=Япония. Игра считается один раз внутри каждого региона. Региональные столбцы нельзя суммировать: Worldwide может относиться к нескольким группам."
+    },
+    {
+      "id": 61,
+      "type": "row",
+      "title": "2. Динамика остатка — неделя и месяц",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 24,
+        "h": 1
+      }
+    },
+    {
+      "id": 7,
+      "title": "Динамика Unknown",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 24,
+        "h": 12
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max by (platform,region) (gstx_unknown_games{job=\"igdb-sync\",platform=~\"${platform:regex}\",region=~\"${region:regex}\"}) and on() ((max(gstx_unknown_collection_success{job=\"igdb-sync\"}) == 1) and (time() - max(gstx_unknown_last_success_timestamp_seconds{job=\"igdb-sync\"}) < 900))",
+          "legendFormat": "{{platform}}[{{region}}]",
+          "format": "time_series",
+          "instant": false,
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "min": 0,
+          "noValue": "—",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "stepAfter",
+            "spanNulls": false,
+            "fillOpacity": 8
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "diff"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "description": "Те же региональные значения; пропуски сбора не соединяются ложными нулями."
+    },
+    {
+      "id": 6,
+      "title": "Изменение за 7 дней: минус — Unknown стало меньше",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(max by (platform,region) (gstx_unknown_games{job=\"igdb-sync\",platform=~\"${platform:regex}\",region=~\"${region:regex}\"}) and on() ((max(gstx_unknown_collection_success{job=\"igdb-sync\"}) == 1) and (time() - max(gstx_unknown_last_success_timestamp_seconds{job=\"igdb-sync\"}) < 900))) - on(platform,region) (max by(platform,region) (gstx_unknown_games{job=\"igdb-sync\",platform=~\"${platform:regex}\",region=~\"${region:regex}\"} offset 7d) and on() ((max(gstx_unknown_collection_success{job=\"igdb-sync\"} offset 7d) == 1) and (time()-604800-max(gstx_unknown_last_success_timestamp_seconds{job=\"igdb-sync\"} offset 7d) < 900)))",
+          "legendFormat": "{{platform}}[{{region}}]",
+          "format": "time_series",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "—"
+        },
+        "overrides": []
+      },
+      "transformations": [],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none"
+      },
+      "description": "Чистое изменение остатка за неделю. Пока нет снимка недельной давности, сравнение пустое."
+    },
+    {
+      "id": 51,
+      "title": "Изменение за 30 дней: минус — Unknown стало меньше",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "gridPos": {
+        "x": 12,
+        "y": 22,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(max by (platform,region) (gstx_unknown_games{job=\"igdb-sync\",platform=~\"${platform:regex}\",region=~\"${region:regex}\"}) and on() ((max(gstx_unknown_collection_success{job=\"igdb-sync\"}) == 1) and (time() - max(gstx_unknown_last_success_timestamp_seconds{job=\"igdb-sync\"}) < 900))) - on(platform,region) (max by(platform,region) (gstx_unknown_games{job=\"igdb-sync\",platform=~\"${platform:regex}\",region=~\"${region:regex}\"} offset 30d) and on() ((max(gstx_unknown_collection_success{job=\"igdb-sync\"} offset 30d) == 1) and (time()-2592000-max(gstx_unknown_last_success_timestamp_seconds{job=\"igdb-sync\"} offset 30d) < 900)))",
+          "legendFormat": "{{platform}}[{{region}}]",
+          "format": "time_series",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "noValue": "—"
+        },
+        "overrides": []
+      },
+      "transformations": [],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none"
+      },
+      "description": "Чистое изменение остатка за 30 дней. Пока нет снимка месячной давности, сравнение пустое."
+    },
+    {
+      "id": 62,
+      "type": "row",
+      "title": "3. Подробная таблица по датам и знаменатели",
+      "collapsed": true,
+      "panels": [
+        {
+          "id": 4,
+          "title": "Оставшиеся Unknown по датам",
+          "type": "table",
+          "datasource": "Prometheus",
+          "gridPos": {
+            "x": 0,
+            "y": 31,
+            "w": 24,
+            "h": 10
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "max by (platform,region) (gstx_unknown_games{job=\"igdb-sync\",platform=~\"${platform:regex}\",region=~\"${region:regex}\"}) and on() ((max(gstx_unknown_collection_success{job=\"igdb-sync\"}) == 1) and (time() - max(gstx_unknown_last_success_timestamp_seconds{job=\"igdb-sync\"}) < 900))",
+              "legendFormat": "{{platform}}[{{region}}]",
+              "format": "time_series",
+              "instant": false,
+              "range": true,
+              "interval": "$sample"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "decimals": 0,
+              "min": 0,
+              "noValue": "—"
+            },
+            "overrides": []
+          },
+          "transformations": [
+            {
+              "id": "joinByField",
+              "options": {
+                "byField": "Time",
+                "mode": "outer"
+              }
+            },
+            {
+              "id": "sortBy",
+              "options": {
+                "sort": [
+                  {
+                    "field": "Time",
+                    "desc": true
+                  }
+                ]
+              }
+            }
+          ],
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm"
+          },
+          "description": "Снимки значений с выбранным шагом; это не количество найденных кодов за день. Пустое значение означает отсутствие надёжного снимка, не ноль. История начинается после установки.",
+          "maxDataPoints": 1000
+        },
+        {
+          "id": 50,
+          "title": "Всего игр с релизом в регионе — знаменатель",
+          "type": "table",
+          "datasource": "Prometheus",
+          "gridPos": {
+            "x": 0,
+            "y": 41,
+            "w": 24,
+            "h": 6
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "max by (platform,region) (gstx_region_games{job=\"igdb-sync\",platform=~\"${platform:regex}\",region=~\"${region:regex}\"}) and on() ((max(gstx_unknown_collection_success{job=\"igdb-sync\"}) == 1) and (time() - max(gstx_unknown_last_success_timestamp_seconds{job=\"igdb-sync\"}) < 900))",
+              "legendFormat": "{{platform}}[{{region}}]",
+              "format": "time_series",
+              "instant": true,
+              "range": false
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "decimals": 0
+            },
+            "overrides": []
+          },
+          "transformations": [
+            {
+              "id": "joinByField",
+              "options": {
+                "byField": "Time",
+                "mode": "outer"
+              }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true
+                }
+              }
+            }
+          ],
+          "options": {
+            "showHeader": true
+          }
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 30,
+        "w": 24,
+        "h": 1
+      }
+    },
+    {
+      "id": 63,
+      "type": "row",
+      "title": "4. Состояние сбора и правила",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "x": 0,
+        "y": 31,
+        "w": 24,
+        "h": 1
+      }
+    },
+    {
+      "id": 9,
+      "title": "Последний сбор: 1 — успешно, 0 — ошибка",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 24,
+        "h": 3
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(gstx_unknown_collection_success{job=\"igdb-sync\"})",
+          "legendFormat": "{{platform}}[{{region}}]",
+          "format": "time_series",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "min": 0,
+          "noValue": "—"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 10,
+      "title": "Возраст последнего успешного снимка, секунды",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "gridPos": {
+        "x": 0,
+        "y": 36,
+        "w": 24,
+        "h": 3
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "time()-max(gstx_unknown_last_success_timestamp_seconds{job=\"igdb-sync\"})",
+          "legendFormat": "{{platform}}[{{region}}]",
+          "format": "time_series",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "min": 0,
+          "noValue": "—"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 11,
+      "type": "text",
+      "title": "Как читать дашборд",
+      "gridPos": {
+        "x": 0,
+        "y": 40,
+        "w": 24,
+        "h": 7
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "**Единица — игра в регионе на выбранной платформе.** Чужой региональный серийник не закрывает пропуск. При наличии релиза нужного региона используются только его серийники. Worldwide используется, только если такого регионального релиза нет. OTHER объединяет остальные регионы, включая Worldwide, как фильтр каталога.\n\nОтбор соответствует видимости каталога без поиска, жанровых и мультиплеерных фильтров: активная платформа, не digital_only на уровне игры/платформы, допустимый тип игры, хотя бы один датированный неотменённый релиз на платформе. Существующее правило каталога не исключает будущие даты. Пустые и пробельные серийники не считаются заполнением.\n\n**Совпадает с обновлённым Unknown** при стандартных фильтрах. Числитель — игры без регионального серийника; знаменатель — все подходящие игры с релизом в этой группе. При поиске, жанровых или мультиплеерных фильтрах сайт считает выбранную подвыборку, а мониторинг — всю платформу.\n\nСбор каждые 5 минут, запрос только для чтения с таймаутом. Ошибка сбора скрывает актуальные значения; старые данные не превращаются в нули. После 15 минут без нового снимка значения считаются устаревшими. Хранение Prometheus по умолчанию 90 дней с лимитом блоков 2 GB (лимит размера может сократить период); прошлые значения не восстанавливаются задним числом."
+      }
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "platform",
+        "label": "Платформы",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(gstx_unknown_games, platform)",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "sort": 1
+      },
+      {
+        "name": "region",
+        "label": "Регионы",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(gstx_unknown_games, region)",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "sort": 1
+      },
+      {
+        "name": "sample",
+        "label": "Шаг истории",
+        "type": "custom",
+        "query": "5m,1h,1d",
+        "current": {
+          "text": "1d",
+          "value": "1d"
+        },
+        "options": [
+          {
+            "text": "5m",
+            "value": "5m",
+            "selected": false
+          },
+          {
+            "text": "1h",
+            "value": "1h",
+            "selected": false
+          },
+          {
+            "text": "1d",
+            "value": "1d",
+            "selected": true
+          }
+        ]
+      }
+    ]
+  }
+}

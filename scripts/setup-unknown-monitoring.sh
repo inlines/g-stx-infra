@@ -57,5 +57,7 @@ volume_after=$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/
 # Existing textfile mount /var/lib/game-stockx-igdb/metrics and Grafana file provider.
 # Start only the textfile exporter if needed; the existing TSDB was preserved above.
 docker compose up -d --no-recreate --no-deps igdb-metrics
+# Providers are loaded on startup; JSON changes are then polled automatically.
+docker compose restart grafana
 echo 'Installed. Open Game StockX - Unknown серийники in Grafana after 30-60 seconds.'
 echo 'Check: systemctl status gstx-unknown-metrics.timer; journalctl -u gstx-unknown-metrics.service -n 20'

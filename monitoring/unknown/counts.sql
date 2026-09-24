@@ -28,8 +28,8 @@ WITH releases AS MATERIALIZED (
 ), eligible AS (
  SELECT f.* FROM flags f JOIN public.products p ON p.id=f.product_id
  WHERE f.visible
- AND (p.game_type NOT IN (1,2,4,13,6,5) OR p.game_type IS NULL
-      OR (f.platform=7 AND p.game_type IN (2,4) AND f.physical))
+ AND (public.effective_game_type(p.id,f.platform,p.game_type) NOT IN (1,2,4,13,6,5,14) OR public.effective_game_type(p.id,f.platform,p.game_type) IS NULL
+      OR (f.platform=7 AND public.effective_game_type(p.id,f.platform,p.game_type) IN (2,4) AND f.physical))
  AND EXISTS(SELECT 1 FROM public.product_platforms pp WHERE pp.product_id=p.id
             AND pp.platform_id=f.platform AND pp.digital_only=false)
 ), regional AS (

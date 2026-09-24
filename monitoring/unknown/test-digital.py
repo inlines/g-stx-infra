@@ -7,6 +7,7 @@ codes=api.split('let codes = format!(',1)[1].split('"',1)[1].split('"',1)[0]
 physical=physical.replace('{platform}','48').replace('{regions}',"ARRAY[unknown_region.region]::text[]")
 codes=codes.replace('{platform}','48')
 fixture='''BEGIN;
+CREATE FUNCTION pg_temp.effective_game_type(game int,platform int,fallback int) RETURNS int LANGUAGE sql IMMUTABLE AS $$ SELECT fallback $$;
 CREATE TEMP TABLE products(id int,game_type int);
 CREATE TEMP TABLE platforms(id int,active bool,abbreviation text);
 CREATE TEMP TABLE product_platforms(product_id int,platform_id int,digital_only bool);

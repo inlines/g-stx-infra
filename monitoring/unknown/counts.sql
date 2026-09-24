@@ -5,25 +5,25 @@ BEGIN READ ONLY;
 SET LOCAL statement_timeout = '20s';
 SET LOCAL lock_timeout = '2s';
 WITH releases AS MATERIALIZED (
- SELECT r.*, EXISTS(SELECT 1 FROM unnest(r.serial) s WHERE btrim(s)<>'') AS known
+ SELECT r.*, (r.release_status IS DISTINCT FROM 5 AND r.release_date <= EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)) AS released, EXISTS(SELECT 1 FROM unnest(r.serial) s WHERE btrim(s)<>'') AS known
  FROM public.releases r JOIN public.platforms pl ON pl.id=r.platform AND pl.active=true AND pl.id<>6
 ), flags AS (
  SELECT product_id,platform,
-   bool_or(release_status IS DISTINCT FROM 5 AND release_date IS NOT NULL) AS visible,
-   bool_or(NOT digital_only AND known) AS physical,
+   bool_or(released) AS visible,
+   bool_or(NOT digital_only AND released AND known) AS physical,
    bool_or(release_region=1) AS pal, bool_or(release_region=2) AS usa,
    bool_or(release_region=5) AS jap, bool_or(release_region=8) AS ww,
    bool_or(release_region IS NULL OR release_region NOT IN (1,2,5)) AS other,
-   bool_or(release_region=1 AND NOT digital_only) AS physical_pal,
-   bool_or(release_region=2 AND NOT digital_only) AS physical_usa,
-   bool_or(release_region=5 AND NOT digital_only) AS physical_jap,
-   bool_or(release_region=8 AND NOT digital_only) AS physical_ww,
-   bool_or((release_region IS NULL OR release_region NOT IN (1,2,5)) AND NOT digital_only) AS physical_other,
-   bool_or(release_region=1 AND NOT digital_only AND known) AS known_pal,
-   bool_or(release_region=2 AND NOT digital_only AND known) AS known_usa,
-   bool_or(release_region=5 AND NOT digital_only AND known) AS known_jap,
-   bool_or(release_region=8 AND NOT digital_only AND known) AS known_ww,
-   bool_or((release_region IS NULL OR release_region NOT IN (1,2,5)) AND NOT digital_only AND known) AS known_other
+   bool_or(release_region=1 AND NOT digital_only AND released) AS physical_pal,
+   bool_or(release_region=2 AND NOT digital_only AND released) AS physical_usa,
+   bool_or(release_region=5 AND NOT digital_only AND released) AS physical_jap,
+   bool_or(release_region=8 AND NOT digital_only AND released) AS physical_ww,
+   bool_or((release_region IS NULL OR release_region NOT IN (1,2,5)) AND NOT digital_only AND released) AS physical_other,
+   bool_or(release_region=1 AND NOT digital_only AND released AND known) AS known_pal,
+   bool_or(release_region=2 AND NOT digital_only AND released AND known) AS known_usa,
+   bool_or(release_region=5 AND NOT digital_only AND released AND known) AS known_jap,
+   bool_or(release_region=8 AND NOT digital_only AND released AND known) AS known_ww,
+   bool_or((release_region IS NULL OR release_region NOT IN (1,2,5)) AND NOT digital_only AND released AND known) AS known_other
  FROM releases GROUP BY product_id,platform
 ), eligible AS (
  SELECT f.* FROM flags f JOIN public.products p ON p.id=f.product_id

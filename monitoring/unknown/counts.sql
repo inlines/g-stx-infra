@@ -5,12 +5,12 @@ BEGIN READ ONLY;
 SET LOCAL statement_timeout = '20s';
 SET LOCAL lock_timeout = '2s';
 WITH releases AS MATERIALIZED (
- SELECT r.*, (r.release_status IS DISTINCT FROM 5 AND r.release_date <= EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)) AS released, EXISTS(SELECT 1 FROM unnest(r.serial) s WHERE btrim(s)<>'') AS known
+ SELECT r.*, (r.release_status IS DISTINCT FROM 5 AND (r.release_date IS NULL OR r.release_date <= EXTRACT(EPOCH FROM CURRENT_TIMESTAMP))) AS released, EXISTS(SELECT 1 FROM unnest(r.serial) s WHERE btrim(s)<>'') AS known
  FROM public.releases r JOIN public.platforms pl ON pl.id=r.platform AND pl.active=true AND pl.id<>6
 ), flags AS (
  SELECT product_id,platform,
    bool_or(released) AS visible,
-   bool_or(NOT digital_only AND released AND known) AS physical,
+   bool_or(NOT digital_only AND known) AS physical,
    bool_or(release_region=1) AS pal, bool_or(release_region=2) AS usa,
    bool_or(release_region=5) AS jap, bool_or(release_region=8) AS ww,
    bool_or(release_region IS NULL OR release_region NOT IN (1,2,5)) AS other,

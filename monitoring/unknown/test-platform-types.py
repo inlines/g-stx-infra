@@ -8,13 +8,13 @@ fixture='''BEGIN;
 CREATE TEMP TABLE products(id int,game_type int);
 CREATE TEMP TABLE platforms(id int,active bool,abbreviation text);
 CREATE TEMP TABLE product_platforms(product_id int,platform_id int,digital_only bool);
-CREATE TEMP TABLE releases(product_id int,platform int,release_region int,digital_only bool,serial text[],release_status int,release_date date);
+CREATE TEMP TABLE releases(product_id int,platform int,release_region int,digital_only bool,serial text[],release_status int,release_date bigint);
 CREATE TEMP TABLE product_platform_type_overrides(product_id int,platform_id int,game_type int);
 CREATE FUNCTION pg_temp.effective_game_type(game int,platform int,fallback int) RETURNS int LANGUAGE sql STABLE AS $$ SELECT coalesce((SELECT o.game_type FROM pg_temp.product_platform_type_overrides o WHERE o.product_id=game AND o.platform_id=platform),fallback) $$;
 INSERT INTO products VALUES(1,10),(2,0);
 INSERT INTO platforms VALUES(9,true,'PS3'),(38,true,'PSP');
 INSERT INTO product_platforms SELECT p.id,pl.id,false FROM products p CROSS JOIN platforms pl;
-INSERT INTO releases SELECT p.id,pl.id,1,false,NULL,NULL,'2011-01-01'::date FROM products p CROSS JOIN platforms pl;
+INSERT INTO releases SELECT p.id,pl.id,1,false,NULL,NULL,1293840000 FROM products p CROSS JOIN platforms pl;
 INSERT INTO product_platform_type_overrides VALUES(1,9,14);
 '''
 queries=[]

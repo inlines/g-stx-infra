@@ -10,6 +10,8 @@ fi
 python3 "$ROOT/scripts/prepare-security-env.py"
 docker compose config --quiet
 docker compose build backend frontend
+# Start dependencies explicitly: backend deployment deliberately uses --no-deps.
+docker compose up -d --wait --wait-timeout 180 postgres redis
 docker compose up -d --no-deps --wait --wait-timeout 180 backend
 docker compose up -d --no-deps --force-recreate frontend
 docker compose ps backend frontend

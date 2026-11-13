@@ -10,8 +10,10 @@ git pull --ff-only
 bash scripts/init.sh && bash scripts/deploy.sh
 ```
 
-`init.sh` обновляет исходники из main. `deploy.sh` собирает приложения, ждёт
-готовности backend и пересоздаёт frontend. PostgreSQL и его том не пересоздаются.
+`init.sh` обновляет исходники из main. `deploy.sh` собирает приложения, запускает
+PostgreSQL и Redis и ждёт их готовности перед запуском backend. Затем ждёт
+готовности backend и пересоздаёт frontend. Отсутствующие контейнеры зависимостей
+создаются заново; существующий том PostgreSQL сохраняется.
 Исправление Nginx исключает штатный IPv6 helper, зависавший на `apk manifest nginx`;
 слушатели задаются нашим `frontend/nginx.conf`.
 

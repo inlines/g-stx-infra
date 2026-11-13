@@ -13,6 +13,7 @@ services:
       - frontend-backend
 
   backend:
+    restart: unless-stopped
     build:
       context: ./backend
     networks:
@@ -27,6 +28,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     healthcheck:  # Добавлен healthcheck для backend
       test: ["CMD", "curl", "-f", "http://localhost:9090/health"]
       interval: 30s
@@ -34,6 +37,7 @@ services:
       retries: 3
 
   redis:
+    restart: unless-stopped
     image: redis:alpine
     command: [
       "redis-server",
@@ -60,6 +64,7 @@ services:
       start_period: 20s
 
   frontend:
+    restart: unless-stopped
     build:
       context: ./frontend
     ports:
@@ -67,11 +72,14 @@ services:
     networks:
       - frontend-backend
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     volumes:
       - /var/www/static:/var/www/static:ro
 
   postgres:
+    restart: unless-stopped
+    stop_grace_period: 60s
     image: postgres:15
     environment:
       POSTGRES_DB: gstx
@@ -137,6 +145,7 @@ services:
       - frontend-backend
 
   grafana:
+    restart: unless-stopped
     env_file:
       - ./.secrets/monitoring.env
     image: grafana/grafana

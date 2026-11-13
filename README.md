@@ -116,3 +116,32 @@ docker volume create g-stx-infra_prometheus-data
 ```
 
 Исходный анонимный том не удаляйте до проверки графиков и резервной копии.
+
+## Восстановление после перезагрузки VPS
+
+Все постоянные сервисы используют `restart: unless-stopped`: Docker запускает
+существующие контейнеры после перезагрузки хоста и перезапускает завершившиеся
+процессы. Включите Docker при загрузке ОС: `systemctl enable docker.service`.
+Контейнеры, вручную остановленные через `stop`, остаются остановленными; удалённые
+через `down` нужно создать командой `compose up`.
+
+Применение конфигурации к существующей установке с готовыми образами:
+
+```sh
+cd /root/g-stx-infra && git pull --ff-only && systemctl enable docker.service && docker compose up -d --no-build --pull never --wait --wait-timeout 180
+```
+
+Команда может кратковременно перезапустить изменённые сервисы. Именованные тома
+сохраняются. Для PostgreSQL предусмотрено до 60 секунд на штатную остановку.
+При `compose up` backend ждёт готовности PostgreSQL и Redis, frontend — backend.
+При загрузке Docker порядок `depends_on` не применяется: backend использует
+своё ожидание PostgreSQL, завершившиеся процессы повторно запускает Docker.
+Статус `unhealthy` сам по себе не вызывает перезапуск контейнера.
+
+Проверка после перезагрузки:
+
+```sh
+docker compose ps
+docker compose exec -T backend curl -fsS http://127.0.0.1:9090/health
+curl -I --max-time 10 http://127.0.0.1/
+```

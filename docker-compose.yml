@@ -91,17 +91,20 @@ services:
 
   prometheus:
     image: prom/prometheus
+    restart: unless-stopped
     container_name: prometheus
     # Заменяем проброс порта на внутренний экспорт:
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./prometheus/web.yml:/etc/prometheus/web.yml
+      - prometheus-data:/prometheus
     environment:
       - BASIC_AUTH_PASSWORD=${PROMETHEUS_PASSWORD}
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--web.config.file=/etc/prometheus/web.yml'
       - '--web.listen-address=:9090'
+      - '--storage.tsdb.path=/prometheus/data'
       - '--storage.tsdb.retention.time=${PROMETHEUS_RETENTION_TIME:-90d}'
       - '--storage.tsdb.retention.size=${PROMETHEUS_RETENTION_SIZE:-2GB}'
     networks:
@@ -165,6 +168,9 @@ volumes:
         device: tmpfs
   pgdata:
   grafana-storage:
+  prometheus-data:
+    external: true
+    name: g-stx-infra_prometheus-data
 
 networks:
   frontend-backend:
